@@ -30,8 +30,11 @@ services:
       SECRET_KEY: ${SECRET_KEY}
     ports:
       - "8000:8000"
+    volumes:
+      - media_data:/app/media  
     stdin_open: true
     tty: true
 
 volumes:
   db_data:
+  media_data:
