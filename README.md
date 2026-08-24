@@ -11,3 +11,9 @@ A Django REST Framework-based portal where users can submit complaints and feedb
 - PostgreSQL
 - JWT Authentication
 - Docker
+
+## Requirements
+
+- Python 3.14
+- Docker
+- Docker Compose
