@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     "rest_framework",
 
 ]
+#Its purpose is to tell Django which model should be used as the project's User model.
+AUTH_USER_MODEL = "accounts.User"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

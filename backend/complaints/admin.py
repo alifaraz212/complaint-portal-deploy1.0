@@ -1,3 +1,7 @@
 from django.contrib import admin
+from .models import Category, Complaint, Response, ActivityLog
 
-# Register your models here.
+admin.site.register(Category)
+admin.site.register(Complaint)
+admin.site.register(Response)
+admin.site.register(ActivityLog)
