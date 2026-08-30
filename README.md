@@ -8,7 +8,7 @@ A Django REST Framework-based portal where users submit complaints, track their 
 - PostgreSQL 15
 - JWT Authentication (djangorestframework-simplejwt)
 - Docker + Docker Compose
-- Python 3.14
+- Python 3.12
 
 ## Project Structure
 
