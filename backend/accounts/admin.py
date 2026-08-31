@@ -43,3 +43,15 @@ class UserAdmin(BaseUserAdmin):
             "fields": ("email", "full_name", "phone", "role", "password1", "password2"),
         }),
     )
+    
+    # Override single record deletion — sets is_archived=True instead of deleting the row
+    # This is called when admin clicks delete on a single user
+    def delete_model(self, request, obj):
+        obj.is_archived = True
+        obj.is_active = False  # also deactivate so archived user cannot log in
+        obj.save()
+
+    # Override bulk deletion — called when admin selects multiple users and deletes
+    # queryset.delete() would bypass delete_model so we need this separately
+    def delete_queryset(self, request, queryset):
+        queryset.update(is_archived=True, is_active=False)

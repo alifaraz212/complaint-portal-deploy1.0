@@ -29,6 +29,9 @@ class UserManager(BaseUserManager):
             **extra_fields,
         )
 
+class ActiveUserManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_archived=False)
 
 class User(AbstractUser):
     class Role(models.TextChoices):
@@ -49,9 +52,12 @@ class User(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["full_name"]
     created_at = models.DateTimeField(auto_now_add=True)
+    is_archived = models.BooleanField(default=False)
 
 
     objects = UserManager()
+    active = ActiveUserManager()
+
 
     def __str__(self):
         return self.email

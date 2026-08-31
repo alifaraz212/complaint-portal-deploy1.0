@@ -2,6 +2,13 @@ from django.db import models, connection
 from django.conf import settings
 
 
+# Custom manager that filters out archived complaints from normal queries
+# Use Complaint.active.all() to get only non-archived complaints
+# Use Complaint.objects.all() to get everything including archived
+class ActiveManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_archived=False)
+
 # =============================================================================
 # Category Model
 # Represents the type/category of a complaint (e.g. Billing, Technical)
@@ -43,6 +50,7 @@ class Complaint(models.Model):
         IN_PROGRESS = "in_progress", "In Progress"
         RESOLVED    = "resolved",    "Resolved"
         CLOSED      = "closed",      "Closed"
+        
 
     class Priority(models.TextChoices):
         LOW    = "low",    "Low"
@@ -133,6 +141,10 @@ class Complaint(models.Model):
     # Set automatically when status changes to resolved, null until then
     resolved_at = models.DateTimeField(null=True, blank=True)
 
+    # Soft delete flag — True means archived, False means active
+    # Never set this manually — use the admin delete action or archive() method
+    is_archived = models.BooleanField(default=False)
+
     # -------------------------------------------------------------------------
     # Meta and methods
     # -------------------------------------------------------------------------
@@ -142,6 +154,9 @@ class Complaint(models.Model):
         ordering = ["-created_at"]
         verbose_name = "Complaint"
         verbose_name_plural = "Complaints"
+
+    # Active manager — filters out archived complaints automatically
+    active = ActiveManager()
 
     def __str__(self):
         return self.complaint_number
