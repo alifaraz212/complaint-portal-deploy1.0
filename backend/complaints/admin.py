@@ -1,11 +1,12 @@
 from django.contrib import admin
-from .models import Category, Complaint, Response, ActivityLog
+from .models import Category, Complaint, Response, ActivityLog, ComplaintAttachment
 
-# Category, Response, ActivityLog use plain registration
+# Category, Response, ActivityLog, ComplaintAttachment use plain registration
 # They don't have is_archived so no soft delete override needed
 admin.site.register(Category)
 admin.site.register(Response)
 admin.site.register(ActivityLog)
+admin.site.register(ComplaintAttachment)
 
 
 # Complaint has soft delete — override delete actions

@@ -77,15 +77,3 @@ The `-v` flag removes named volumes including PostgreSQL data. You will need to 
 - **User** — register, submit complaints, track status, reply to admin responses
 - **Admin** — view all complaints, assign priority, change status, respond, view dashboard
 
-## Milestones (Pull Requests)
-
-| PR | Branch | Status |
-|----|--------|--------|
-| PR1 | milestone-1/project-setup | Merged |
-| PR2 | milestone-2/docker-setup | Merged |
-| PR3 | milestone-3/models-and-migrations | In Review |
-| PR4 | milestone-4/authentication | Upcoming |
-| PR5 | milestone-5/complaints-crud | Upcoming |
-| PR6 | milestone-6/dashboard | Upcoming |
-| PR7 | milestone-7/frontend | Upcoming |
-| PR8 | milestone-8/testing-and-docs | Upcoming |

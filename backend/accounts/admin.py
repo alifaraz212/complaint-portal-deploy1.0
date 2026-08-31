@@ -29,7 +29,9 @@ class UserAdmin(BaseUserAdmin):
             "fields": ("role",)
         }),
         ("Permissions", {
-            "fields": ("is_staff", "is_active", "is_superuser", "groups", "user_permissions")
+            # Using groups only for permissions — user_permissions is redundant
+            # Create groups (e.g. Admin, User) and assign users to them
+            "fields": ("is_staff", "is_active", "is_superuser", "groups")
         }),
         ("Important Dates", {
             "fields": ("last_login", "date_joined")

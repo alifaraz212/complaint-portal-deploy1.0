@@ -9,6 +9,23 @@ class ActiveManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(is_archived=False)
 
+
+# Default manager with bulk_create override  
+# Generates complaint_numbers for bulk operations using the same sequence as save()
+class ComplaintManager(models.Manager):
+    def bulk_create(self, objs, **kwargs):
+        # Auto-generate complaint_numbers for objects that don't have one
+        # Uses the same PostgreSQL sequence as the save() method
+        for obj in objs:
+            if not obj.complaint_number:
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT nextval('complaint_number_seq')")
+                    number = cursor.fetchone()[0]
+                obj.complaint_number = f"CMP-{number:05d}"
+        
+        return super().bulk_create(objs, **kwargs)
+
+
 # =============================================================================
 # Category Model
 # Represents the type/category of a complaint (e.g. Billing, Technical)
@@ -86,10 +103,13 @@ class Complaint(models.Model):
 
     # Auto-generated unique business ID e.g. CMP-00001
     # editable=False: cannot be manually set, only generated via save()
+    # null=True: allows bulk_create to pass null so DB default generates the number
     complaint_number = models.CharField(
         max_length=20,
         unique=True,
         editable=False,
+        null=True,
+        blank=True,
     )
 
     # Short summary of the complaint
@@ -97,13 +117,6 @@ class Complaint(models.Model):
 
     # Full detailed description of the complaint
     description = models.TextField()
-
-    # Optional image attachment uploaded by the user
-    attachment = models.ImageField(
-        upload_to="complaints/",
-        blank=True,
-        null=True,
-    )
 
     # -------------------------------------------------------------------------
     # Status and priority fields
@@ -157,6 +170,10 @@ class Complaint(models.Model):
 
     # Active manager — filters out archived complaints automatically
     active = ActiveManager()
+
+    # Default manager — returns ALL complaints including archived
+    # Uses ComplaintManager which overrides bulk_create to use DB-generated complaint_number
+    objects = ComplaintManager()
 
     def __str__(self):
         return self.complaint_number
@@ -213,21 +230,42 @@ class Response(models.Model):
 
 
 # =============================================================================
+# ComplaintAttachment Model
+# Stores file attachments for a complaint
+# Separate model so a complaint can have multiple attachments
+# Files are stored on disk — only the path is stored in the database
+# =============================================================================
+class ComplaintAttachment(models.Model):
+
+    # CASCADE: attachments are deleted when complaint is deleted
+    complaint = models.ForeignKey(
+        Complaint,
+        on_delete=models.CASCADE,
+        related_name="attachments",
+    )
+
+    # Stores file path only — actual file lives on disk in media/complaints/attachments/
+    # Django's ImageField never stores binary in the database
+    file = models.ImageField(upload_to="complaints/attachments/")
+
+    # Automatically set when attachment is uploaded
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["uploaded_at"]
+        verbose_name = "Complaint Attachment"
+        verbose_name_plural = "Complaint Attachments"
+
+    def __str__(self):
+        return f"Attachment for complaint {self.complaint_id}"
+
+
+# =============================================================================
 # ActivityLog Model
 # Tracks every action performed on a complaint
 # Used for full audit trail — status changes, priority sets, responses added
 # =============================================================================
 class ActivityLog(models.Model):
-
-    # -------------------------------------------------------------------------
-    # Action choices
-    # -------------------------------------------------------------------------
-
-    class Action(models.TextChoices):
-        CREATED        = "created",        "Created"
-        STATUS_CHANGED = "status_changed", "Status Changed"
-        PRIORITY_SET   = "priority_set",   "Priority Set"
-        RESPONSE_ADDED = "response_added", "Response Added"
 
     # -------------------------------------------------------------------------
     # Fields
@@ -249,11 +287,10 @@ class ActivityLog(models.Model):
         related_name="activity_logs",
     )
 
-    # What type of action was performed
-    action = models.CharField(
-        max_length=50,
-        choices=Action.choices,
-    )
+    # Plain CharField — no hardcoded choices
+    # New action types can be added without code changes or migrations
+    # Validation of allowed values is handled in the serializer
+    action = models.CharField(max_length=100)
 
     # Previous value before the change (e.g. old status "open")
     old_value = models.CharField(max_length=100, blank=True)
