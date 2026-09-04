@@ -28,6 +28,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       SECRET_KEY: ${SECRET_KEY}
+      DEBUG: ${DEBUG}
     ports:
       - "8000:8000"
     volumes:
