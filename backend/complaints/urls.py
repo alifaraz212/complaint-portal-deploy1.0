@@ -62,6 +62,12 @@ urlpatterns = [
         views.ResponseListCreateView.as_view(),
         name="response-list-create",
     ),
+    # Attachments (nested under complaints)
+    path(
+        "complaints/<int:complaint_pk>/attachments/",
+        views.AttachmentListCreateView.as_view(),
+        name="attachment-list-create",
+    ),
     # Activity log (nested under complaints)
     path(
         "complaints/<int:complaint_pk>/activity/",

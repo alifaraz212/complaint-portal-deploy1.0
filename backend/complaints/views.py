@@ -17,9 +17,11 @@ from accounts.permissions import IsAdmin, IsOwnerOrAdmin
 from .filters import ComplaintFilter
 from .models import ActivityLog, Category, Complaint
 from .models import Response as ComplaintResponse
+from .models import ComplaintAttachment
 from .serializers import (
     ActivityLogSerializer,
     CategorySerializer,
+    ComplaintAttachmentSerializer,
     ComplaintCreateSerializer,
     ComplaintDetailSerializer,
     ComplaintListSerializer,
@@ -247,6 +249,58 @@ class ComplaintDeleteView(generics.DestroyAPIView):
             {"message": f"Complaint {instance.complaint_number} has been closed."},
             status=status.HTTP_200_OK,
         )
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Attachment views (nested under complaints)
+# ─────────────────────────────────────────────────────────────────────
+
+class AttachmentListCreateView(generics.ListCreateAPIView):
+    """
+    GET  /api/complaints/complaints/{complaint_pk}/attachments/ — List attachments
+    POST /api/complaints/complaints/{complaint_pk}/attachments/ — Upload attachment
+
+    Both owner and admin can upload attachments to a complaint.
+    """
+
+    serializer_class = ComplaintAttachmentSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardPagination
+
+    def get_complaint(self):
+        """
+        Retrieve the parent complaint and check permissions.
+
+        - Owner can access their own complaint's attachments.
+        - Admin can access any complaint's attachments.
+        """
+        complaint = generics.get_object_or_404(
+            Complaint.objects.select_related("user"),
+            pk=self.kwargs["complaint_pk"],
+        )
+        # Check ownership or admin
+        if (
+            self.request.user.role != "admin"
+            and complaint.user != self.request.user
+        ):
+            self.permission_denied(self.request)
+        return complaint
+
+    def get_queryset(self):
+        complaint = self.get_complaint()
+        return ComplaintAttachment.objects.filter(
+            complaint=complaint
+        ).order_by("-uploaded_at")
+
+    def perform_create(self, serializer):
+        """Attach the complaint to the uploaded file."""
+        complaint = self.get_complaint()
+        serializer.save(complaint=complaint)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["complaint"] = self.get_complaint()
+        return context
 
 
 # ─────────────────────────────────────────────────────────────────────

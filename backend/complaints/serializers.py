@@ -13,7 +13,7 @@ Separate serializers for different operations:
 
 from rest_framework import serializers
 
-from .models import ActivityLog, Category, Complaint, Response
+from .models import ActivityLog, Category, Complaint, Response, ComplaintAttachment
 from .services import (
     add_response,
     create_complaint,
@@ -21,6 +21,32 @@ from .services import (
     update_complaint_status,
     validate_status_transition,
 )
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Attachment
+# ─────────────────────────────────────────────────────────────────────
+
+class ComplaintAttachmentSerializer(serializers.ModelSerializer):
+    """
+    Serializer for uploading complaint attachments (images).
+    
+    File is uploaded and stored on disk. Only file path stored in DB.
+    """
+
+    file_url = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = ComplaintAttachment
+        fields = ["id", "file", "file_url", "uploaded_at"]
+        read_only_fields = ["id", "file_url", "uploaded_at"]
+
+    def get_file_url(self, obj):
+        """Return the full URL to the uploaded file."""
+        request = self.context.get("request")
+        if obj.file and request:
+            return request.build_absolute_uri(obj.file.url)
+        return None
 
 
 # ─────────────────────────────────────────────────────────────────────
