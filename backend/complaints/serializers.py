@@ -3,6 +3,7 @@ Complaint serializers.
 
 Separate serializers for different operations:
 - CategorySerializer: CRUD for categories (admin)
+- ComplaintAttachmentSerializer: Upload and list attachments
 - ComplaintCreateSerializer: User submits a new complaint
 - ComplaintListSerializer: Listing complaints (lightweight)
 - ComplaintDetailSerializer: Full complaint with responses and activity
@@ -242,6 +243,7 @@ class ComplaintDetailSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(source="user.email", read_only=True, default=None)
     responses = ResponseSerializer(many=True, read_only=True)
     activity_logs = ActivityLogSerializer(many=True, read_only=True)
+    attachments = ComplaintAttachmentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Complaint
@@ -262,6 +264,7 @@ class ComplaintDetailSerializer(serializers.ModelSerializer):
             "resolved_at",
             "responses",
             "activity_logs",
+            "attachments",
         ]
         read_only_fields = fields
 

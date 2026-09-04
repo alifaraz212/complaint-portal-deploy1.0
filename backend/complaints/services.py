@@ -100,9 +100,15 @@ def update_complaint_status(*, complaint, new_status, performed_by):
     - resolved_at is cleared if status moves away from 'resolved'.
     - Every change is logged in ActivityLog.
 
+    Uses select_for_update() to prevent concurrent race conditions where
+    two simultaneous requests could both validate against stale data.
+
     Raises:
         ValueError: If the transition is not allowed.
     """
+    # Lock the row for the duration of this transaction to prevent concurrent updates
+    complaint = Complaint.objects.select_for_update().get(pk=complaint.pk)
+    
     old_status = complaint.status
 
     if old_status == new_status:

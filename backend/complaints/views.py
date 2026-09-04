@@ -139,10 +139,24 @@ class ComplaintListCreateView(generics.ListCreateAPIView):
         return ComplaintListSerializer
 
     def get_queryset(self):
-        qs = Complaint.objects.select_related("category", "user")
+        qs = Complaint.active.select_related("category", "user")
         if self.request.user.role == "admin":
             return qs
         return qs.filter(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Override create to return full complaint detail instead of just input echo.
+        
+        This gives the client the complaint_number and id immediately after creation.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        complaint = serializer.save()
+        
+        # Return the full detail view
+        detail_serializer = ComplaintDetailSerializer(complaint)
+        return DRFResponse(detail_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ComplaintDetailView(generics.RetrieveAPIView):
@@ -162,7 +176,7 @@ class ComplaintDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
 
     def get_queryset(self):
-        return Complaint.objects.select_related(
+        return Complaint.active.select_related(
             "category", "user"
         ).prefetch_related(
             "responses__author",
@@ -196,7 +210,7 @@ class ComplaintUpdateView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated, IsAdmin]
 
     def get_queryset(self):
-        return Complaint.objects.select_related("category", "user")
+        return Complaint.active.select_related("category", "user")
 
     def get_serializer_class(self):
         return ComplaintUpdateSerializer
@@ -234,13 +248,25 @@ class ComplaintDeleteView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated, IsAdmin]
 
     def get_queryset(self):
-        return Complaint.objects.all()
+        return Complaint.active.all()
 
     def perform_destroy(self, instance):
-        """Soft-close instead of hard-delete."""
-        if instance.status != Complaint.Status.CLOSED:
-            instance.status = Complaint.Status.CLOSED
-            instance.save(update_fields=["status", "updated_at"])
+        """
+        Soft-close by routing through the service layer.
+        
+        Uses update_complaint_status() so the transition follows workflow rules
+        and creates an activity log entry for the audit trail.
+        """
+        from .services import update_complaint_status
+        try:
+            update_complaint_status(
+                complaint=instance,
+                new_status=Complaint.Status.CLOSED,
+                performed_by=self.request.user,
+            )
+        except ValueError as e:
+            # Status transition not allowed by workflow
+            raise serializers.ValidationError(str(e))
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -348,6 +374,19 @@ class ResponseListCreateView(generics.ListCreateAPIView):
         context = super().get_serializer_context()
         context["complaint"] = self.get_complaint()
         return context
+
+    def create(self, request, *args, **kwargs):
+        """
+        Override create to block responses on closed complaints.
+
+        Closed complaints are terminal — no further activity allowed.
+        """
+        complaint = self.get_complaint()
+        if complaint.status == Complaint.Status.CLOSED:
+            raise serializers.ValidationError(
+                "Cannot add responses to a closed complaint."
+            )
+        return super().create(request, *args, **kwargs)
 
 
 # ─────────────────────────────────────────────────────────────────────
