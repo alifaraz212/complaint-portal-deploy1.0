@@ -34,11 +34,14 @@ class IsOwnerOrAdmin(BasePermission):
     or is an admin.
 
     Requires the object to have a 'user' attribute (e.g., Complaint.user).
+    Must always be paired with IsAuthenticated in permission_classes.
     """
 
     message = "You do not have permission to access this resource."
 
     def has_object_permission(self, request, view, obj):
+        if not (request.user and request.user.is_authenticated):
+            return False
         if request.user.role == "admin":
             return True
         return obj.user == request.user

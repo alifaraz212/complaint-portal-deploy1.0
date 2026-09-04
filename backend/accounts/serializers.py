@@ -7,6 +7,7 @@ Handles user registration, profile viewing/updating, and password changes.
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
 
@@ -100,3 +101,14 @@ class ChangePasswordSerializer(serializers.Serializer):
                 {"new_password": "New password must be different from current password."}
             )
         return attrs
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Lowercases email before authentication so login is case-insensitive.
+    Keeps login consistent with registration which stores emails lowercased.
+    """
+
+    def validate(self, attrs):
+        attrs[self.username_field] = attrs[self.username_field].lower()
+        return super().validate(attrs)
