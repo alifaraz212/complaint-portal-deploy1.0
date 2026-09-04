@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'complaints',
     'dashboard',
     "rest_framework",
-
+    'django_filters',
 ]
 #Its purpose is to tell Django which model should be used as the project's User model.
 AUTH_USER_MODEL = "accounts.User"
@@ -150,6 +150,10 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "EXCEPTION_HANDLER": "config.exception_handler.custom_exception_handler",
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.OrderingFilter",
+    ],
 }
 
 SIMPLE_JWT = {
