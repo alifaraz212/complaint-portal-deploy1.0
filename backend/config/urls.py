@@ -4,6 +4,8 @@ Root URL configuration for the Complaint Portal.
 Routes:
 - /admin/      — Django admin
 - /api/auth/   — Authentication (register, login, profile)
+- /api/complaints/ — Complaint CRUD operations
+- /api/dashboard/  — Dashboard statistics
 """
 
 from django.conf import settings
@@ -15,6 +17,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("accounts.urls")),
     path("api/complaints/", include("complaints.urls")),
+    path('api/dashboard/', include('dashboard.urls')),
 ]
 
 if settings.DEBUG:
