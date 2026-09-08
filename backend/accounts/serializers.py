@@ -44,6 +44,21 @@ class RegisterSerializer(serializers.ModelSerializer):
             )
         return normalized
 
+    def validate_phone(self, value):
+        """Validate phone number format and length."""
+        import re
+        if value:
+            cleaned = re.sub(r'[\s\-\+\(\)]', '', value)
+            if not cleaned.isdigit():
+                raise serializers.ValidationError(
+                    "Phone number can only contain digits, +, -, spaces, and parentheses."
+                )
+            if len(cleaned) < 7 or len(cleaned) > 15:
+                raise serializers.ValidationError(
+                    "Phone number must be between 7 and 15 digits."
+                )
+        return value
+
     def create(self, validated_data):
         """
         Create user via manager's create_user().
@@ -106,8 +121,17 @@ class ChangePasswordSerializer(serializers.Serializer):
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
     Lowercases email before authentication so login is case-insensitive.
-    Keeps login consistent with registration which stores emails lowercased.
+    Adds role and email to the JWT payload so the frontend can read them
+    without a separate API call.
     """
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # Add custom claims to JWT payload
+        token['role'] = user.role
+        token['email'] = user.email
+        return token
 
     def validate(self, attrs):
         attrs[self.username_field] = attrs[self.username_field].lower()

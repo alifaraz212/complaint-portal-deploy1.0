@@ -13,12 +13,16 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from django.views.static import serve
+import re
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("accounts.urls")),
     path("api/complaints/", include("complaints.urls")),
     path('api/dashboard/', include('dashboard.urls')),
+    # Serve media files regardless of DEBUG setting
+    path('media/<path:path>', serve, {'document_root': settings.MEDIA_ROOT}),
+    # Serve static files regardless of DEBUG setting
+    path('static/<path:path>', serve, {'document_root': settings.STATIC_ROOT}),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

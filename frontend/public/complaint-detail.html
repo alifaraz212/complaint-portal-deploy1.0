@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complaint Detail</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav>
+        <h1>Complaint Portal</h1>
+        <div id="navBack"></div>
+    </nav>
+
+    <div class="container" style="max-width: 900px;">
+        <a href="#" id="backLink" class="back-link">← Back</a>
+
+        <!-- Complaint Info -->
+        <div class="card" id="complaintCard">
+            <h3>Loading...</h3>
+        </div>
+
+        <!-- Admin Controls (visible to admin only) -->
+        <div class="card admin-section" id="adminControls">
+            <h3>Admin Actions</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Change Status</label>
+                    <select id="statusSelect">
+                        <option value="">-- Select --</option>
+                        <option value="open">Open</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Set Priority</label>
+                    <select id="prioritySelect">
+                        <option value="">-- Select --</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Admin Notes (internal)</label>
+                <textarea id="adminNotes" placeholder="Internal notes not visible to user..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="updateComplaint()">Save Changes</button>
+        </div>
+
+        <!-- Responses / Conversation Thread -->
+        <div class="card">
+            <h3>Conversation</h3>
+            <div id="responsesList"></div>
+            <div class="form-group" style="margin-top: 16px;">
+                <label>Add Reply</label>
+                <textarea id="replyMessage" placeholder="Type your reply..."></textarea>
+            </div>
+            <button class="btn btn-success" onclick="submitReply()">Send Reply</button>
+        </div>
+
+        <!-- Activity Log (admin only) -->
+        <div class="card admin-section" id="activityCard">
+            <h3>Activity Log</h3>
+            <div id="activityList"></div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/complaint-detail.js"></script>
+</body>
+</html>

@@ -35,6 +35,14 @@ services:
       - media_data:/app/media  
     stdin_open: true
     tty: true
+    
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - app
+
 
 volumes:
   db_data:
