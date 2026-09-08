@@ -67,16 +67,18 @@ def get_dashboard_stats():
         .values_list('name', 'count')
     )
 
-    # 5. Average resolution time (only resolved complaints)
+    # 5. Average resolution time
+    # Include both resolved and closed complaints — closed complaints
+    # have resolved_at preserved now (only cleared on backwards transitions)
     resolved_stats = Complaint.active.filter(
-        status=Complaint.Status.RESOLVED,
+        status__in=[Complaint.Status.RESOLVED, Complaint.Status.CLOSED],
         resolved_at__isnull=False
     ).aggregate(
         avg_duration=Avg(F('resolved_at') - F('created_at'))
     )
-    # Convert timedelta to hours
+    # Convert timedelta to hours — preserves precision (5 mins = 0.0833 hours)
     avg_duration = resolved_stats.get('avg_duration')
-    avg_hours = avg_duration.total_seconds() / 3600 if avg_duration else 0
+    avg_hours = round(avg_duration.total_seconds() / 3600, 4) if avg_duration else 0
 
     # 6. This month vs last month
     today = timezone.now()
@@ -112,13 +114,14 @@ def get_recent_activity():
     """
     from complaints.serializers import ComplaintListSerializer, ActivityLogSerializer
 
-    # Last 10 complaints
-    complaints = Complaint.active.order_by('-created_at')[:10]
+    # Last 10 complaints — select_related prevents N+1 on category.name and user.email
+    complaints = Complaint.active.select_related('category', 'user').order_by('-created_at')[:10]
     recent_complaints = ComplaintListSerializer(complaints, many=True).data
 
-    # Last 10 status changes
+    # Last 10 status changes — exclude activity from archived complaints
     changes = ActivityLog.objects.filter(
-        action='status_changed'
+        action='status_changed',
+        complaint__is_archived=False
     ).select_related('performed_by', 'complaint').order_by('-timestamp')[:10]
     recent_status_changes = ActivityLogSerializer(changes, many=True).data
 

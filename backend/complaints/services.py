@@ -123,8 +123,9 @@ def update_complaint_status(*, complaint, new_status, performed_by):
     # Auto-manage resolved_at timestamp
     if new_status == Complaint.Status.RESOLVED:
         complaint.resolved_at = timezone.now()
-    elif old_status == Complaint.Status.RESOLVED:
-        # Moving away from resolved — clear the timestamp
+    elif old_status == Complaint.Status.RESOLVED and new_status == Complaint.Status.IN_PROGRESS:
+        # Only clear resolved_at when moving BACKWARDS (resolved → in_progress)
+        # NOT when moving forwards (resolved → closed) — we want to keep the timestamp
         complaint.resolved_at = None
 
     complaint.save(update_fields=["status", "resolved_at", "updated_at"])
