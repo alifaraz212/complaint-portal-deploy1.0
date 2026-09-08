@@ -28,28 +28,42 @@ def get_dashboard_stats():
     # 1. Total complaints (excluding archived)
     total = Complaint.active.count()
 
-    # 2. By status
-    by_status = dict(
+    # 2. By status — include all defined statuses even if count is zero
+    # Build from choices first so statuses with 0 complaints still appear
+    actual_counts = dict(
         Complaint.active
         .values('status')
         .annotate(count=Count('id'))
         .values_list('status', 'count')
     )
+    by_status = {
+        status: actual_counts.get(status, 0)
+        for status, _ in Complaint.Status.choices
+    }
 
-    # 3. By priority
-    by_priority = dict(
+    # 3. By priority — include all defined priorities even if count is zero
+    # Build from choices first so priorities with 0 complaints still appear
+    actual_priority_counts = dict(
         Complaint.active
         .values('priority')
         .annotate(count=Count('id'))
         .filter(priority__isnull=False)
         .values_list('priority', 'count')
     )
+    by_priority = {
+        priority: actual_priority_counts.get(priority, 0)
+        for priority, _ in Complaint.Priority.choices
+    }
+    # unassigned = priority IS NULL (not set by admin yet)
     by_priority['unassigned'] = Complaint.active.filter(priority__isnull=True).count()
 
-    # 4. By category
+    # 4. By category — only count active (non-archived) complaints
     by_category = dict(
         Category.objects
-        .annotate(count=Count('complaints'))
+        .annotate(count=Count(
+            'complaints',
+            filter=Q(complaints__is_archived=False)
+        ))
         .values_list('name', 'count')
     )
 
