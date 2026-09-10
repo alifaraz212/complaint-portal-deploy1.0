@@ -221,3 +221,9 @@ __marimo__/
 # Postman
 .postman/
 postman/
+
+# Django collected static files (generated, not source)
+staticfiles/
+
+# Session notes
+SESSION_SUMMARY.md
