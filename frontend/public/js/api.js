@@ -33,8 +33,18 @@ async function apiRequest(url, options = {}) {
     }
 
     if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-        throw new Error(error.detail || error.message || JSON.stringify(error));
+        const error = await response.json().catch(() => ({ error: 'Request failed' }));
+        // Our custom exception handler uses {error: "...", details: {...}}
+        // DRF default uses {detail: "..."}
+        let message = error.error || error.detail || 'Request failed';
+        // If field-level details exist, append them
+        if (error.details) {
+            const fieldErrors = Object.entries(error.details)
+                .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+                .join(' | ');
+            message = `${message} — ${fieldErrors}`;
+        }
+        throw new Error(message);
     }
 
     return response.json();

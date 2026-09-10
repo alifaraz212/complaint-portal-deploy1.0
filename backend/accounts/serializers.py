@@ -4,12 +4,34 @@ Accounts serializers.
 Handles user registration, profile viewing/updating, and password changes.
 """
 
+import re
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
+
+
+def validate_phone_number(value):
+    """
+    Shared phone validation used by both RegisterSerializer and UserProfileSerializer.
+
+    Allows digits, +, -, spaces, and parentheses.
+    Cleaned number (digits only) must be 7-15 characters.
+    """
+    if value:
+        cleaned = re.sub(r'[\s\-\+\(\)]', '', value)
+        if not cleaned.isdigit():
+            raise serializers.ValidationError(
+                "Phone number can only contain digits, +, -, spaces, and parentheses."
+            )
+        if len(cleaned) < 7 or len(cleaned) > 15:
+            raise serializers.ValidationError(
+                "Phone number must be between 7 and 15 digits."
+            )
+    return value
 
 class RegisterSerializer(serializers.ModelSerializer):
     """
@@ -45,19 +67,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         return normalized
 
     def validate_phone(self, value):
-        """Validate phone number format and length."""
-        import re
-        if value:
-            cleaned = re.sub(r'[\s\-\+\(\)]', '', value)
-            if not cleaned.isdigit():
-                raise serializers.ValidationError(
-                    "Phone number can only contain digits, +, -, spaces, and parentheses."
-                )
-            if len(cleaned) < 7 or len(cleaned) > 15:
-                raise serializers.ValidationError(
-                    "Phone number must be between 7 and 15 digits."
-                )
-        return value
+        """Delegate to shared validator."""
+        return validate_phone_number(value)
 
     def create(self, validated_data):
         """
@@ -85,6 +96,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "email", "full_name", "phone", "role", "created_at"]
         read_only_fields = ["id", "email", "role", "created_at"]
+
+    def validate_phone(self, value):
+        """Same phone validation as registration — shared validator."""
+        return validate_phone_number(value)
 
 class ChangePasswordSerializer(serializers.Serializer):
     """

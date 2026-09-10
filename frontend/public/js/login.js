@@ -13,7 +13,9 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.detail || 'Login failed');
+            // Our custom exception handler uses {error: "...", details: {...}}
+            // DRF default uses {detail: "..."}
+            throw new Error(error.error || error.detail || 'Login failed');
         }
 
         const data = await response.json();

@@ -1,6 +1,5 @@
 if (redirectIfNotAuthenticated()) throw new Error('Not authenticated');
 
-// Set user email in navbar
 setTextSafe('userEmail', getUserEmail());
 
 const statusColors = {
@@ -10,16 +9,22 @@ const statusColors = {
     'closed': 'badge-closed'
 };
 
-async function loadComplaints(status = '') {
+let currentPage = 1;
+let currentStatus = '';
+
+async function loadComplaints(page = 1, status = '') {
     const tbody = document.getElementById('complaintsTable');
     tbody.innerHTML = '';
 
     try {
-        const url = status ? `/complaints/complaints/?status=${status}` : '/complaints/complaints/';
-        const data = await apiRequest(url);
+        const params = new URLSearchParams();
+        if (status) params.append('status', status);
+        params.append('page', page);
 
-        // Handle paginated response
+        const data = await apiRequest(`/complaints/complaints/?${params.toString()}`);
         const complaints = data.results || data;
+        const count = data.count || complaints.length;
+        const pageSize = 10;
 
         if (!complaints.length) {
             const tr = document.createElement('tr');
@@ -29,36 +34,31 @@ async function loadComplaints(status = '') {
             td.textContent = 'No complaints found';
             tr.appendChild(td);
             tbody.appendChild(tr);
+            renderPagination(0, pageSize, page);
             return;
         }
 
         complaints.forEach(complaint => {
             const tr = document.createElement('tr');
 
-            // ID
             const tdId = document.createElement('td');
-            tdId.textContent = complaint.complaint_number;
+            tdId.textContent = complaint.complaint_number; // SAFE
 
-            // Subject
             const tdSubject = document.createElement('td');
-            tdSubject.textContent = complaint.subject;
+            tdSubject.textContent = complaint.subject; // SAFE
 
-            // Category
             const tdCategory = document.createElement('td');
-            tdCategory.textContent = complaint.category_name || '-';
+            tdCategory.textContent = complaint.category_name || '-'; // SAFE
 
-            // Status badge
             const tdStatus = document.createElement('td');
             const badge = document.createElement('span');
             badge.className = `badge ${statusColors[complaint.status] || ''}`;
-            badge.textContent = complaint.status.replace('_', ' ').toUpperCase();
+            badge.textContent = complaint.status.replace('_', ' ').toUpperCase(); // SAFE
             tdStatus.appendChild(badge);
 
-            // Created at
             const tdDate = document.createElement('td');
-            tdDate.textContent = new Date(complaint.created_at).toLocaleDateString();
+            tdDate.textContent = new Date(complaint.created_at).toLocaleDateString(); // SAFE
 
-            // View link
             const tdAction = document.createElement('td');
             const link = document.createElement('a');
             link.href = `/complaint-detail.html?id=${complaint.id}`;
@@ -75,13 +75,56 @@ async function loadComplaints(status = '') {
             tbody.appendChild(tr);
         });
 
+        renderPagination(count, pageSize, page);
+
     } catch (error) {
         showError(error.message);
     }
 }
 
+function renderPagination(total, pageSize, current) {
+    const container = document.getElementById('pagination');
+    container.innerHTML = '';
+    const totalPages = Math.ceil(total / pageSize);
+    if (totalPages <= 1) return;
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.textContent = '← Prev';
+    prevBtn.disabled = current === 1;
+    prevBtn.addEventListener('click', () => {
+        currentPage = current - 1;
+        loadComplaints(currentPage, currentStatus);
+    });
+    container.appendChild(prevBtn);
+
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.className = `page-btn${i === current ? ' active' : ''}`;
+        btn.textContent = i;
+        const pageNum = i;
+        btn.addEventListener('click', () => {
+            currentPage = pageNum;
+            loadComplaints(currentPage, currentStatus);
+        });
+        container.appendChild(btn);
+    }
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.textContent = 'Next →';
+    nextBtn.disabled = current === totalPages;
+    nextBtn.addEventListener('click', () => {
+        currentPage = current + 1;
+        loadComplaints(currentPage, currentStatus);
+    });
+    container.appendChild(nextBtn);
+}
+
 document.getElementById('statusFilter').addEventListener('change', (e) => {
-    loadComplaints(e.target.value);
+    currentStatus = e.target.value;
+    currentPage = 1;
+    loadComplaints(currentPage, currentStatus);
 });
 
-loadComplaints();
+loadComplaints(1, '');

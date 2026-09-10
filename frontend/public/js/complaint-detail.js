@@ -124,13 +124,31 @@ function renderComplaint(complaint) {
         card.appendChild(attLabel);
 
         complaint.attachments.forEach(att => {
-            const link = document.createElement('a');
-            link.href = att.file_url || '#';
-            link.target = '_blank';
-            link.className = 'attachment-link';
-            link.textContent = 'View Attachment ' + att.id;
-            link.style.display = 'block';
-            card.appendChild(link);
+            // Use a button that fetches the file with auth token
+            // Direct href links don't send Authorization header — would get 401
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-secondary btn-sm attachment-link';
+            btn.style.marginBottom = '6px';
+            btn.textContent = 'View Attachment ' + att.id;
+            btn.addEventListener('click', async () => {
+                try {
+                    const token = getAccessToken();
+                    const response = await fetch(att.file_url, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (!response.ok) {
+                        showError('Could not load attachment');
+                        return;
+                    }
+                    // Create a blob URL and open in new tab
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    window.open(blobUrl, '_blank');
+                } catch (e) {
+                    showError('Could not load attachment');
+                }
+            });
+            card.appendChild(btn);
         });
     }
 }
