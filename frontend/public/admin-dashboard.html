@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav>
+        <h1>Admin — Complaint Portal</h1>
+        <div class="nav-links">
+            <a href="/admin-dashboard.html">Dashboard</a>
+            <a href="/admin-complaints.html">All Complaints</a>
+            <a href="/categories.html">Categories</a>
+            <button onclick="logout()" class="btn btn-danger">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 style="margin-bottom: 20px;">Dashboard</h2>
+
+        <!-- Top stat cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="number" id="totalComplaints">—</div>
+                <div class="label">Total Complaints</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="thisMonth">—</div>
+                <div class="label">This Month</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="lastMonth">—</div>
+                <div class="label">Last Month</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="avgResolution">—</div>
+                <div class="label">Avg Resolution (hrs)</div>
+            </div>
+        </div>
+
+        <!-- By status / by priority -->
+        <div class="two-col">
+            <div class="card">
+                <h3>By Status</h3>
+                <div id="byStatus"></div>
+            </div>
+            <div class="card">
+                <h3>By Priority</h3>
+                <div id="byPriority"></div>
+            </div>
+        </div>
+
+        <!-- By category -->
+        <div class="card">
+            <h3>By Category</h3>
+            <div id="byCategory"></div>
+        </div>
+
+        <!-- Recent complaints + recent activity -->
+        <div class="two-col">
+            <div class="card">
+                <h3>Recent Complaints</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentComplaints"></tbody>
+                </table>
+            </div>
+            <div class="card">
+                <h3>Recent Status Changes</h3>
+                <div id="recentActivity"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/admin-dashboard.js"></script>
+</body>
+</html>

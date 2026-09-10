@@ -4,12 +4,34 @@ Accounts serializers.
 Handles user registration, profile viewing/updating, and password changes.
 """
 
+import re
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
+
+
+def validate_phone_number(value):
+    """
+    Shared phone validation used by both RegisterSerializer and UserProfileSerializer.
+
+    Allows digits, +, -, spaces, and parentheses.
+    Cleaned number (digits only) must be 7-15 characters.
+    """
+    if value:
+        cleaned = re.sub(r'[\s\-\+\(\)]', '', value)
+        if not cleaned.isdigit():
+            raise serializers.ValidationError(
+                "Phone number can only contain digits, +, -, spaces, and parentheses."
+            )
+        if len(cleaned) < 7 or len(cleaned) > 15:
+            raise serializers.ValidationError(
+                "Phone number must be between 7 and 15 digits."
+            )
+    return value
 
 class RegisterSerializer(serializers.ModelSerializer):
     """
@@ -44,6 +66,10 @@ class RegisterSerializer(serializers.ModelSerializer):
             )
         return normalized
 
+    def validate_phone(self, value):
+        """Delegate to shared validator."""
+        return validate_phone_number(value)
+
     def create(self, validated_data):
         """
         Create user via manager's create_user().
@@ -70,6 +96,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "email", "full_name", "phone", "role", "created_at"]
         read_only_fields = ["id", "email", "role", "created_at"]
+
+    def validate_phone(self, value):
+        """Same phone validation as registration — shared validator."""
+        return validate_phone_number(value)
 
 class ChangePasswordSerializer(serializers.Serializer):
     """
@@ -106,8 +136,17 @@ class ChangePasswordSerializer(serializers.Serializer):
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
     Lowercases email before authentication so login is case-insensitive.
-    Keeps login consistent with registration which stores emails lowercased.
+    Adds role and email to the JWT payload so the frontend can read them
+    without a separate API call.
     """
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # Add custom claims to JWT payload
+        token['role'] = user.role
+        token['email'] = user.email
+        return token
 
     def validate(self, attrs):
         attrs[self.username_field] = attrs[self.username_field].lower()

@@ -208,11 +208,16 @@ class ActivityLogSerializer(serializers.ModelSerializer):
     performed_by_email = serializers.EmailField(
         source="performed_by.email", read_only=True
     )
+    complaint_number = serializers.CharField(
+        source="complaint.complaint_number", read_only=True
+    )
 
     class Meta:
         model = ActivityLog
         fields = [
             "id",
+            "complaint",
+            "complaint_number",
             "action",
             "old_value",
             "new_value",

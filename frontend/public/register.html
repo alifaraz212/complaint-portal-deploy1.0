@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="center-screen">
+        <div class="auth-card">
+            <h2>Register</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="full_name" required autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label>Phone (optional)</label>
+                    <input type="tel" id="phone" autocomplete="tel"
+                           pattern="[0-9+\-\s()]+"
+                           maxlength="15"
+                           placeholder="+92 300 1234567">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" required minlength="8" autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="password_confirm" required minlength="8" autocomplete="new-password">
+                </div>
+                <button type="submit" class="btn btn-success btn-block">Register</button>
+            </form>
+            <div class="auth-footer">
+                Already have an account? <a href="/login.html">Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/register.js"></script>
+</body>
+</html>

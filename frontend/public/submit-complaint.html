@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Complaint</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav>
+        <h1>Complaint Portal</h1>
+        <a href="/user-dashboard.html" class="btn btn-secondary">← Back</a>
+    </nav>
+
+    <div class="container-sm">
+        <div class="card">
+            <h2>Submit New Complaint</h2>
+            <form id="complaintForm">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="category" required>
+                        <option value="">Select a category...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input type="text" id="subject" required placeholder="Brief summary of your complaint">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="description" required placeholder="Describe your complaint in detail..." style="min-height: 120px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Attachment (optional)</label>
+                    <input type="file" id="attachment" accept="image/*">
+                    <p class="form-note">Images only. Uploaded separately after complaint is created.</p>
+                </div>
+                <div class="form-footer">
+                    <a href="/user-dashboard.html" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Submit Complaint</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/submit-complaint.js"></script>
+</body>
+</html>
