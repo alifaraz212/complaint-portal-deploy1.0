@@ -32,7 +32,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - media_data:/app/media  
+      - media_data:/app/media
+      - ./backend:/app  
     stdin_open: true
     tty: true
     
