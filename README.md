@@ -134,6 +134,18 @@ This starts three services:
 | Django API | http://localhost:8000/api/ |
 | Django Admin | http://localhost:8000/admin |
 
+### Run Migrations
+
+```bash
+docker compose exec app python manage.py migrate
+```
+
+### Collect Static Files (Django Admin CSS)
+
+```bash
+docker compose exec app python manage.py collectstatic --noinput
+```
+
 ### Create Admin User
 
 ```bash

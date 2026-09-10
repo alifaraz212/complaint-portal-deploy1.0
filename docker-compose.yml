@@ -34,6 +34,7 @@ services:
     volumes:
       - media_data:/app/media
       - ./backend:/app  
+      - static_data:/app/staticprofiles
     stdin_open: true
     tty: true
     
@@ -48,3 +49,4 @@ services:
 volumes:
   db_data:
   media_data:
+  static_data:
