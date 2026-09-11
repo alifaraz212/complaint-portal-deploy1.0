@@ -87,6 +87,30 @@ class TestComplaintWorkflow:
         test_complaint.refresh_from_db()
         assert test_complaint.resolved_at is not None
 
+    def test_resolved_at_preserved_after_closing(self, admin_client, test_complaint):
+        # Move to resolved
+        admin_client.patch(
+            f'/api/complaints/complaints/{test_complaint.id}/update/',
+            {'status': 'in_progress'}, format='json'
+        )
+        admin_client.patch(
+            f'/api/complaints/complaints/{test_complaint.id}/update/',
+            {'status': 'resolved'}, format='json'
+        )
+        test_complaint.refresh_from_db()
+        resolved_at = test_complaint.resolved_at
+        assert resolved_at is not None
+
+        # Move to closed
+        admin_client.patch(
+            f'/api/complaints/complaints/{test_complaint.id}/update/',
+            {'status': 'closed'}, format='json'
+        )
+        test_complaint.refresh_from_db()
+
+        # resolved_at must be preserved — not wiped on close
+        assert test_complaint.resolved_at == resolved_at
+
     def test_invalid_transition_open_to_resolved(self, admin_client, test_complaint):
         response = admin_client.patch(
             f'/api/complaints/complaints/{test_complaint.id}/update/',
