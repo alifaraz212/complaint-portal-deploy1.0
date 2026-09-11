@@ -97,6 +97,8 @@ class TestDashboardStats:
         response = admin_client.get('/api/dashboard/stats/')
 
         assert response.data['total_complaints'] == 1  # archived excluded
+        # by_category must also exclude archived complaints
+        assert response.data['by_category']['Test Category'] == 1
 
 @pytest.mark.django_db
 class TestRecentActivity:
@@ -116,4 +118,45 @@ class TestRecentActivity:
 
         response = admin_client.get('/api/dashboard/recent/')
 
-        assert len(response.data['recent_complaints']) <= 10
+        # Must be exactly 10, not 0 or any other number
+        assert len(response.data['recent_complaints']) == 10
+
+
+@pytest.mark.django_db
+class TestProtectedMedia:
+
+    def test_unauthenticated_cannot_access_media(self, api_client):
+        # No token — must be rejected
+        response = api_client.get('/media/complaints/attachments/any-file.jpg')
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_authenticated_user_cannot_access_other_users_media(
+        self, api_client, test_complaint, test_category, db
+    ):
+        from accounts.models import User
+        from complaints.models import ComplaintAttachment
+
+        # Create attachment for test_complaint (owned by test_user)
+        ComplaintAttachment.objects.create(
+            complaint=test_complaint,
+            file='complaints/attachments/secret.jpg'
+        )
+
+        # Create another user and login to get a real JWT token
+        other_user = User.objects.create_user(
+            email='other@example.com',
+            full_name='Other User',
+            password='OtherPass123!',
+            role='user'
+        )
+
+        # Get real JWT token (protected_media reads Authorization header directly)
+        login_response = api_client.post('/api/auth/login/', {
+            'email': 'other@example.com',
+            'password': 'OtherPass123!'
+        }, format='json')
+        token = login_response.data['access']
+        api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+        response = api_client.get('/media/complaints/attachments/secret.jpg')
+        assert response.status_code == status.HTTP_403_FORBIDDEN
