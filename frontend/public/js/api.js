@@ -20,7 +20,7 @@ async function apiRequest(url, options = {}) {
         config.headers['Content-Type'] = 'application/json';
     }
 
-    let response = await fetch(`${API_BASE_URL}${url}`, config);
+    let response = await fetch(`${API_URL}${url}`, config);
 
     // If 401 and haven't retried yet, refresh token and retry once
     if (response.status === 401 && !options._retry) {
