@@ -1,7 +1,8 @@
 // API Request Wrapper with Auto-Refresh
 // Security: Uses _retry flag to prevent infinite refresh loops
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_URL = "https://complaint-portal-deploy1-0.onrender.com/api";
+
 
 async function apiRequest(url, options = {}) {
     let token = getAccessToken();
