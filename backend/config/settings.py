@@ -39,7 +39,7 @@ ALLOWED_HOSTS = os.environ.get(
 if os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
     ALLOWED_HOSTS.append(os.environ["RENDER_EXTERNAL_HOSTNAME"])
 
-CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+CSRF_TRUSTED_ORIGINS = [url for url in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if url.strip()]
 # Application definition
 
 INSTALLED_APPS = [
