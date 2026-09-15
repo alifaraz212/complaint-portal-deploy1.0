@@ -5,20 +5,11 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const password = document.getElementById('password').value;
 
     try {
-        const response = await fetch('http://localhost:8000/api/auth/login/', {
+        const data = await apiRequest('/auth/login/', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
 
-        if (!response.ok) {
-            const error = await response.json();
-            // Our custom exception handler uses {error: "...", details: {...}}
-            // DRF default uses {detail: "..."}
-            throw new Error(error.error || error.detail || 'Login failed');
-        }
-
-        const data = await response.json();
         saveTokens(data.access, data.refresh);
 
         // Redirect based on role decoded from JWT

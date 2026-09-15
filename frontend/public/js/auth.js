@@ -94,7 +94,7 @@ async function refreshAccessToken() {
     // Create shared promise that all concurrent requests will wait for
     refreshPromise = (async () => {
         try {
-            const response = await fetch('http://localhost:8000/api/auth/refresh/', {
+            const response = await fetch(`${API_URL}/auth/refresh/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ refresh })
